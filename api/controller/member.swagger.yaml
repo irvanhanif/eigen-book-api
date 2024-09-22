@@ -1,0 +1,421 @@
+# create member
+/member:
+  post:
+    summary: to create member in member table
+    description: This api will insert data into member table and return detail new member
+    tags:
+      - member
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+                example: "M004"
+              name:
+                type: string
+                example: "Juki"
+    responses:
+      201:
+        description: result of success create member
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      example: "M004"
+                    name:
+                      type: string
+                      example: "Juki"
+                    penalty:
+                      type: string
+                      example: null
+      409:
+        description: result of warning duplicate data
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Data with code M004 already exists"
+      500:
+        description: result of warning some error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: object
+
+  # get all data member
+  get:
+    summary: to get all data from member table
+    description: This api will return all of data in member table.
+    tags:
+      - member
+    responses:
+      200:
+        description: return all member
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: "M004"
+                      name:
+                        type: string
+                        example: "Juki"
+                      penalty:
+                        type: string
+                        example: "1726688069000"
+      500:
+        description: result of warning some error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+              message:
+                type: object
+
+# get detail member
+/member/{id}:
+  get:
+    summary: to get data by ID from member table
+    description: This api will return detail data from member table with the primary key to pointing data.
+    tags:
+      - member
+    parameters:
+      - in: path
+        name: id
+        required: true
+        description: ID required
+        schema:
+          type: string
+    responses:
+      200:
+        description: return detail data member
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      example: "M004"
+                    name:
+                      type: string
+                      example: "Juki"
+                    penalty:
+                      type: string
+                      example: "1726688069000"
+      404:
+        description: return of warn that data is not exist
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Data not found"
+      500:
+        description: result of warning some error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: object
+
+  # update data member
+  put:
+    summary: to change data member by ID from member table
+    description: This api will changing detail data from member table with the primary key to pointing data.
+    tags:
+      - member
+    parameters:
+      - in: path
+        name: id
+        required: true
+        description: ID required
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#components/schemas/member"
+    responses:
+      200:
+        description: return detail data member
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      example: "M004"
+                    name:
+                      type: string
+                      example: "Juki"
+                    penalty:
+                      type: string
+                      format: date
+                      example: "1726790400000"
+      404:
+        description: return of warn that data is not exist
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Data not found"
+      500:
+        description: result of warning some error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: object
+
+  # delete data member
+  delete:
+    summary: to delete data by ID from member table
+    description: This api will remove data from member table with the primary key to pointing data.
+    tags:
+      - member
+    parameters:
+      - in: path
+        name: id
+        required: true
+        description: ID required
+        schema:
+          type: string
+    responses:
+      200:
+        description: success delete data member
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    affectedRows:
+                      type: integer
+                      example: 1
+      404:
+        description: return of warn that data is not exist
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Data not found"
+      500:
+        description: result of warning some error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: object
+
+# get data book borrowed by member
+/member/{id}/borrow:
+  get:
+    summary: get data book borrowed by member ID
+    description: This api will return data how books which borrowed by member with the primary key (code) from member table to pointing data.
+    tags:
+      - member
+    parameters:
+      - in: path
+        name: id
+        required: true
+        description: ID required
+        schema:
+          type: string
+    responses:
+      200:
+        description: return detail member and number of books thats borrowed by member
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      example: "M004"
+                    name:
+                      type: string
+                      example: "Juki"
+                    penalty:
+                      type: string
+                      example: "0"
+                    borrowed_book:
+                      type: integer
+                      example: "1"
+      404:
+        description: return of warn that data is not exist
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Data not found"
+      500:
+        description: result of warning some error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: object
+
+# get data book borrowed by each member
+/member/all/borrow:
+  get:
+    summary: get data book borrowed by all member
+    description: This api will return how books which borrowed by each member.
+    tags:
+      - member
+    responses:
+      200:
+        description: return detail member and number of books thats borrowed by each member
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                    name:
+                      type: string
+                    penalty:
+                      type: string
+                    borrowed_book:
+                      type: integer
+                  example:
+                    - code: "M001"
+                      name: "Angga"
+                      penalty: "0"
+                      borrowed_book: 2
+                    - code: "M003"
+                      name: "Putri"
+                      penalty: null
+                      borrowed_book: 0
+                    - code: "M004"
+                      name: "Juki"
+                      penalty: null
+                      borrowed_book: 1
+      500:
+        description: result of warning some error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: object

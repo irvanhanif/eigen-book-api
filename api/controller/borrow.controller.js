@@ -10,44 +10,6 @@ const { ERROR, SUCCESS } = require("../../helper/response");
 const tablename = "borrow";
 
 module.exports = {
-  /**
-   * @swagger
-   * /borrow:
-   *  post:
-   *    summary: to create borrow data in borrow table
-   *    description:
-   *    requestBody:
-   *      required: true
-   *      content:
-   *        application/json:
-   *          schema:
-   *            $ref: '#/components/schemas/borrow'
-   *    responses:
-   *      201:
-   *        description: result of success create borrow data
-   *        content:
-   *          application/json:
-   *            schema:
-   *              type: object
-   *              properties:
-   *                success:
-   *                  type: string
-   *                  example: true
-   *                data:
-   *                  type: object
-   *                  properties:
-   *                    book_code:
-   *                      type: string
-   *                      example: "NRN-7"
-   *                    member_code:
-   *                      type: string
-   *                      example: "M004"
-   *                    date_borrow:
-   *                      type: string
-   *                      format: date
-   *                      example: "1726790400000"
-   */
-
   createBorrow: async (req, res) => {
     const { book_code, member_code, date_borrow } = req.body;
 
@@ -59,7 +21,6 @@ module.exports = {
       };
 
       await borrowSchema.validateAsync(dataBorrow);
-      dataBorrow["date_borrow"] = date_borrow;
 
       const checkMemberBorrow = await selectData({
         tablename: tablename,
@@ -67,8 +28,8 @@ module.exports = {
       });
       if (checkMemberBorrow.error)
         return ERROR(res, 500, checkMemberBorrow.error);
-      if (checkMemberBorrow.result.length > 2)
-        return ERROR(res, 400, "Borrow books will be more than 2");
+      if (checkMemberBorrow.result.length > 1)
+        return ERROR(res, 422, "Borrowing books must not exceed 2");
 
       const checkBookBorrowed = await selectData({
         tablename: "book",
@@ -76,8 +37,10 @@ module.exports = {
       });
       if (checkBookBorrowed.error)
         return ERROR(res, 500, checkBookBorrowed.error);
+      if (checkBookBorrowed.result.length == 0)
+        return ERROR(res, 404, `The book with code ${book_code} is not found`);
       if (checkBookBorrowed.result[0].stock == 0)
-        return ERROR(res, 400, "The books is empty to borrow");
+        return ERROR(res, 200, "The book is empty to borrow");
 
       const checkMemberNotPenalty = await selectData({
         column: "penalty",
@@ -86,6 +49,12 @@ module.exports = {
       });
       if (checkMemberNotPenalty.error)
         return ERROR(res, 500, checkMemberNotPenalty.error);
+      if (checkMemberNotPenalty.result.length == 0)
+        return ERROR(
+          res,
+          404,
+          `The member with code ${member_code} is not found`
+        );
 
       if (
         checkMemberNotPenalty.result &&
@@ -109,7 +78,7 @@ module.exports = {
               penalty: 0,
             },
           });
-        } else return ERROR(res, 400, "The member has penalty");
+        } else return ERROR(res, 403, "The member has penalty");
       }
 
       const { error, result } = await insertData({
@@ -139,17 +108,6 @@ module.exports = {
     }
   },
 
-  /**
-   * @swagger
-   * /borrow:
-   *  get:
-   *    summary: to get all data from borrow table
-   *    description: This api will return all of data in borrow table.
-   *    responses:
-   *      200:
-   *        description: return all borrow data
-   */
-
   getAllBorrowed: async (req, res) => {
     const { error, result } = await selectData({
       tablename: tablename,
@@ -159,32 +117,8 @@ module.exports = {
     return SUCCESS(res, 200, result);
   },
 
-  /**
-   * @swagger
-   * /borrow/:
-   *  get:
-   *    summary: to get detail data from borrow table
-   *    description: This api will return detail data from borrow table with the primary key to pointing data.
-   *    requestBody:
-   *      required: true
-   *      content:
-   *        application/json:
-   *          schema:
-   *            type: object
-   *            properties:
-   *              book_code:
-   *                type: string
-   *                example: "NRN-7"
-   *              member_code:
-   *                type: string
-   *                example: "M004"
-   *    responses:
-   *      200:
-   *        description:
-   */
-
   getBorrowed: async (req, res) => {
-    const { book_code, member_code } = req.body;
+    const { book_code, member_code } = req.query;
 
     try {
       let pkBorrow = {
@@ -206,44 +140,6 @@ module.exports = {
       if (err) return ERROR(res, 500, err);
     }
   },
-
-  /**
-   * @swagger
-   * /borrow:
-   *  put:
-   *    summary: to change data borrow from borrow table
-   *    description: This api will changing detail data from borrow table with the primary key to pointing data.
-   *    requestBody:
-   *      required: true
-   *      content:
-   *        application/json:
-   *          schema:
-   *            $ref: '#components/schemas/borrow'
-   *    responses:
-   *      200:
-   *        description: return detail data borrow
-   *        content:
-   *          application/json:
-   *            schema:
-   *              type: object
-   *              properties:
-   *                success:
-   *                  type: string
-   *                  example: true
-   *                data:
-   *                  type: object
-   *                  properties:
-   *                    book_code:
-   *                      type: string
-   *                      example: "NRN-7"
-   *                    member_code:
-   *                      type: string
-   *                      example: "M004"
-   *                    date_borrow:
-   *                      type: string
-   *                      format: date
-   *                      example: "1726790400000"
-   */
 
   updateBorrowed: async (req, res) => {
     const {
@@ -267,7 +163,6 @@ module.exports = {
 
       await borrowSchema.validateAsync(dataBorrow);
       await borrowSchema.validateAsync(pkBorrow);
-      dataBorrow["date_borrow"] = date_borrow;
 
       if (config.type == "pg") {
         const { error, result } = await updateData({
@@ -279,13 +174,42 @@ module.exports = {
         if (error) return ERROR(res, 500, error);
         if (result) return SUCCESS(res, 200, result);
       } else if (config.type == "mysql") {
+        const checkBookNewExist = await selectData({
+          tablename: "book",
+          primaryKey: { code: book_code_new },
+        });
+        if (checkBookNewExist.error)
+          return ERROR(res, 500, checkBookNewExist.error);
+        if (checkBookNewExist.result) {
+          if (checkBookNewExist.result.length == 0)
+            return ERROR(
+              res,
+              404,
+              `The book with code ${book_code_new} is not found`
+            );
+          if (checkBookNewExist.result[0].stock == 0)
+            return ERROR(res, 200, "The book is empty to borrow");
+        }
+        const checkMemberNewExist = await selectData({
+          tablename: "member",
+          primaryKey: { code: member_code_new },
+        });
+        if (checkMemberNewExist.error)
+          return ERROR(res, 500, checkMemberNewExist.error);
+        if (checkMemberNewExist && checkMemberNewExist.result.length == 0)
+          return ERROR(
+            res,
+            404,
+            `The member with code ${member_code_new} is not found`
+          );
+
         const deleteBorrow = await deleteData({
           tablename: tablename,
           primaryKey: pkBorrow,
         });
         if (deleteBorrow.error) return ERROR(res, 500, deleteBorrow.error);
 
-        if (deleteBorrow.result) {
+        if (deleteBorrow.result && deleteBorrow.result.affectedRows) {
           const createBorrow = await insertData({
             data: dataBorrow,
             tablename: tablename,
@@ -307,53 +231,15 @@ module.exports = {
               Array.isArray(dataBorrowInDB.result) &&
               dataBorrowInDB.result.length > 0
             )
-              return SUCCESS(res, 201, dataBorrowInDB.result[0]);
+              return SUCCESS(res, 200, dataBorrowInDB.result[0]);
           }
-        }
+        } else return ERROR(res, 409, "member or book code is incorrect");
       }
       return ERROR(res, 404, "Data not found");
     } catch (error) {
       if (error.details) return ERROR(res, 500, error.details);
     }
   },
-
-  /**
-   * @swagger
-   * /borrow:
-   *  delete:
-   *    summary: to delete data from borrow table
-   *    description: This api will remove data from book table with the primary key to pointing data.
-   *    requestBody:
-   *      required: true
-   *      content:
-   *        application/json:
-   *          schema:
-   *            type: object
-   *            properties:
-   *              book_code:
-   *                type: string
-   *                example: "NRN-7"
-   *              member_code:
-   *                type: string
-   *                example: "M004"
-   *    responses:
-   *      200:
-   *        description: Success to delete data from borrow table
-   *        content:
-   *          application/json:
-   *            schema:
-   *              type: object
-   *              properties:
-   *                success:
-   *                  type: string
-   *                  example: true
-   *                data:
-   *                  type: object
-   *                  properties:
-   *                    affectedRows:
-   *                      type: integer
-   *                      example: 1
-   */
 
   deleteBorrowed: async (req, res) => {
     const { book_code, member_code } = req.body;
@@ -365,56 +251,18 @@ module.exports = {
       };
       await borrowSchema.validateAsync(pkBorrow);
 
-      const { err, result } = await deleteData({
+      const { error, result } = await deleteData({
         tablename: tablename,
         primaryKey: pkBorrow,
       });
 
-      if (err) return ERROR(res, 500, err);
-      if (result) return SUCCESS(res, 200, result);
-      return ERROR(res, 404, "Data not found");
-    } catch (error) {
       if (error) return ERROR(res, 500, error);
+      if (result && result.affectedRows) return SUCCESS(res, 200, result);
+      return ERROR(res, 404, "Data not found");
+    } catch (err) {
+      if (err) return ERROR(res, 500, err);
     }
   },
-
-  /**
-   * @swagger
-   * /return:
-   *  delete:
-   *    summary: to handling return book from borrow table
-   *    description: This api will remove data from book table and handling the penalty with the primary key to pointing data.
-   *    requestBody:
-   *      required: true
-   *      content:
-   *        application/json:
-   *          schema:
-   *            type: object
-   *            properties:
-   *              book_code:
-   *                type: string
-   *                example: "NRN-7"
-   *              member_code:
-   *                type: string
-   *                example: "M004"
-   *    responses:
-   *      200:
-   *        description: Success to delete data from borrow table
-   *        content:
-   *          application/json:
-   *            schema:
-   *              type: object
-   *              properties:
-   *                success:
-   *                  type: string
-   *                  example: true
-   *                data:
-   *                  type: object
-   *                  properties:
-   *                    affectedRows:
-   *                      type: integer
-   *                      example: 1
-   */
 
   returnBook: async (req, res) => {
     const { book_code, member_code } = req.body;
@@ -461,7 +309,8 @@ module.exports = {
 
         if (removeRecordBorrow.error)
           return ERROR(res, 500, removeRecordBorrow.error);
-        return SUCCESS(res, 200, removeRecordBorrow.result);
+        if (removeRecordBorrow.result && removeRecordBorrow.result.affectedRows)
+          return SUCCESS(res, 200, removeRecordBorrow.result);
       }
       return ERROR(res, 404, "Data not found");
     } catch (err) {

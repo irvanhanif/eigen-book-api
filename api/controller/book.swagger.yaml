@@ -1,0 +1,363 @@
+# create book
+/book:
+  post:
+    summary: to create book in book table
+    description: This api will insert data into book table and return detail new book
+    tags:
+      - Book
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/book"
+    responses:
+      201:
+        description: result of success create book data
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      example: "NRN-7"
+                    title:
+                      type: string
+                      example: "The Lion, the Witch and the Wardrobe"
+                    author:
+                      type: string
+                      example: "C.S. Lewis"
+                    stock:
+                      type: integer
+                      example: 3
+      409:
+        description: result of warning duplicate data
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Data with code NRN-7 already exists"
+      500:
+        description: result of warning some error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: object
+
+  # get all books
+  get:
+    summary: to get all data from book table
+    description: This api will return all of data in book table.
+    tags:
+      - Book
+    responses:
+      200:
+        description: return of data books
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: "NRN-7"
+                      title:
+                        type: string
+                        example: "The Lion, the Witch and the Wardrobe"
+                      author:
+                        type: string
+                        example: "C.S. Lewis"
+                      stock:
+                        type: integer
+                        example: "3"
+      500:
+        description: result of warning some error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: object
+
+# get detail book
+/book/{id}:
+  get:
+    summary: to get data by ID from book table
+    description: This api will return detail data from book table with the primary key to pointing data.
+    tags:
+      - Book
+    parameters:
+      - in: path
+        name: id
+        required: true
+        description: ID required
+        schema:
+          type: string
+    responses:
+      200:
+        description: return detail of book
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      example: "NRN-7"
+                    title:
+                      type: string
+                      example: "The Lion, the Witch and the Wardrobe"
+                    author:
+                      type: string
+                      example: "C.S. Lewis"
+                    stock:
+                      type: integer
+                      example: 3
+      404:
+        description: return of warn that data is not exist
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Data not found"
+      500:
+        description: result of warning some error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: object
+
+  # update book
+  put:
+    summary: to change data book by ID from book table
+    description: This api will changing detail data from book table with the primary key to pointing data.
+    tags:
+      - Book
+    parameters:
+      - in: path
+        name: id
+        required: true
+        description: ID required
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/book"
+    responses:
+      200:
+        description: return detail data book updated
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      example: "NRN-7"
+                    title:
+                      type: string
+                      example: "The Lion, the Witch and the Wardrobe"
+                    author:
+                      type: string
+                      example: "C.S. Lewis"
+                    stock:
+                      type: integer
+                      example: "5"
+      404:
+        description: return of warn that data is not exist
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Data not found"
+      500:
+        description: result of warning some error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: object
+
+  # delete book
+  delete:
+    summary: to delete data by ID from book table
+    description: This api will remove data from book table with the primary key to pointing data.
+    tags:
+      - Book
+    parameters:
+      - in: path
+        name: id
+        required: true
+        description: ID required
+        schema:
+          type: string
+    responses:
+      200:
+        description: Success to delete data from book table
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    affectedRows:
+                      type: integer
+                      example: 1
+      404:
+        description: return of warn that data is not exist
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Data not found"
+      500:
+        description: result of warning some error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: object
+
+# count all books ready for borrows
+/book/count/all:
+  get:
+    summary: to get data quantities books in stock
+    description: This api will return detail data from all boook in table, where stock is ready and can be borrow by member. Api use primary key to pointing data.
+    tags:
+      - Book
+    responses:
+      200:
+        description: return detail book and quantities
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    books:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          code:
+                            type: string
+                            example: "NRN-7"
+                          title:
+                            type: string
+                            example: "The Lion, the Witch and the Wardrobe"
+                          author:
+                            type: string
+                            example: "C.S. Lewis"
+                          stock:
+                            type: integer
+                            example: "3"
+                    quantities:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          SUM_STOCK:
+                            type: string
+                            example: "3"
+      500:
+        description: result of warning some error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: object

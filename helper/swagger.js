@@ -13,7 +13,12 @@ const option = {
       },
     ],
   },
-  apis: ["./server.js", "./api/controller/*.controller.js"],
+  apis: [
+    "./server.js",
+    "./api/controller/*.controller.js",
+    "./helper/schemaSwagger.yaml",
+    "./api/controller/*.swagger.yaml",
+  ],
 };
 
 module.exports = {

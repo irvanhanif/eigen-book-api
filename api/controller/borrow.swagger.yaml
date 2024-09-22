@@ -1,0 +1,431 @@
+# create borrow data
+/borrow:
+  post:
+    summary: to create borrow data in borrow table
+    description: This api will insert data into borrow table and return detail new borrow
+    tags:
+      - Borrow
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/borrow"
+    responses:
+      201:
+        description: result of success create borrow data
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    book_code:
+                      type: string
+                      example: "NRN-7"
+                    member_code:
+                      type: string
+                      example: "M004"
+                    date_borrow:
+                      type: string
+                      example: "1726790400000"
+      422:
+        description: result warning of borrowing books cant be more than 2
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Borrowing books must not exceed 2"
+      200:
+        description: result warning of book empty
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "The books is empty to borrow"
+      403:
+        description: result to inform that member is punished
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "The member has penalty"
+      404:
+        description: return of warn that data is not exist
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "The member with code M004 or book with code NRN-7 is not found"
+      500:
+        description: result of warning some error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: object
+
+  # get all borrow data
+  get:
+    summary: to get all data from borrow table
+    description: This api will return all of data in borrow table.
+    tags:
+      - Borrow
+    responses:
+      200:
+        description: return all of borrow data
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    book_code:
+                      type: string
+                    member_code:
+                      type: string
+                    date_borrow:
+                      type: string
+                  example:
+                    - book_code: "NRN-7"
+                      member_code: "M004"
+                      date_borrow: "1726963200000"
+                    - book_code: "TW-11"
+                      member_code: "M002"
+                      date_borrow: "1726876800000"
+      500:
+        description: result of warning some error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: object
+
+  # update borrow data
+  put:
+    summary: to change data borrow from borrow table
+    description: This api will changing detail data from borrow table with the primary key to pointing data.
+    tags:
+      - Borrow
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              book_code:
+                type: string
+                example: "NRN-7"
+              member_code:
+                type: string
+                example: "M004"
+              date_borrow:
+                type: string
+                format: date
+              book_code_new:
+                type: string
+                example: "NRN-7"
+              member_code_new:
+                type: string
+                example: "M004"
+    responses:
+      200:
+        description: return detail data borrow
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: string
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    book_code:
+                      type: string
+                      example: "NRN-7"
+                    member_code:
+                      type: string
+                      example: "M004"
+                    date_borrow:
+                      type: string
+                      format: date
+                      example: "1726790400000"
+      404:
+        description: return of warn that data is not exist
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Data not found"
+      409:
+        description: return of warn that old primary key is incorrect
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "member or book code is incorrect"
+      500:
+        description: result of warning some error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: object
+
+  # delete borrow data
+  delete:
+    summary: to delete data from borrow table
+    description: This api will remove data from book table with the primary key to pointing data.
+    tags:
+      - Borrow
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              book_code:
+                type: string
+                example: "NRN-7"
+              member_code:
+                type: string
+                example: "M004"
+    responses:
+      200:
+        description: Success to delete data from borrow table
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: string
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    affectedRows:
+                      type: integer
+                      example: 1
+      404:
+        description: return of warn that data is not exist
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Data not found"
+      500:
+        description: result of warning some error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: object
+
+# get detail borrow books
+/borrow/detail:
+  get:
+    summary: to get detail data from borrow table
+    description: This api will return detail data from borrow table with the primary key to pointing data.
+    tags:
+      - Borrow
+    parameters:
+      - in: query
+        name: member_code
+        schema:
+          type: string
+        required: true
+        description: ID of the member to get
+      - in: query
+        name: book_code
+        schema:
+          type: string
+        required: true
+        description: ID of the book to get
+    responses:
+      200:
+        description: return detail of borrow data
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    book_code:
+                      type: string
+                      example: "NRN-7"
+                    member_code:
+                      type: string
+                      example: "M004"
+                    date_borrow:
+                      type: string
+                      example: "1726790400000"
+      404:
+        description: return of warn that data is not exist
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Data not found"
+      500:
+        description: result of warning some error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: object
+
+# handling return data borrow
+/borrow/return:
+  delete:
+    summary: to handling return book from borrow table
+    description: This api will remove data from book table and handling the penalty with the primary key to pointing data.
+    tags:
+      - Borrow
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              book_code:
+                type: string
+                example: "NRN-7"
+              member_code:
+                type: string
+                example: "M004"
+    responses:
+      200:
+        description: Success to delete data from borrow table
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: string
+                  example: true
+                data:
+                  type: object
+                  properties:
+                    affectedRows:
+                      type: integer
+                      example: 1
+      404:
+        description: return of warn that data is not exist
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: "Data not found"
+      500:
+        description: result of warning some error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: object

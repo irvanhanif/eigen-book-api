@@ -7,54 +7,13 @@ const {
 } = require("../../database/db.query");
 const { memberSchema } = require("../../helper/joiSchema");
 const { ERROR, SUCCESS } = require("../../helper/response");
-const { getBookBorrowedByMember } = require("../services/book.service");
+const {
+  getBookBorrowedByMember,
+  getBookBorrowedByEachMember,
+} = require("../services/book.service");
 const tablename = "member";
 
 module.exports = {
-  /**
-   * @swagger
-   * /member:
-   *  post:
-   *    summary: to create member in member table
-   *    description:
-   *    requestBody:
-   *      required: true
-   *      content:
-   *        application/json:
-   *          schema:
-   *            type: object
-   *            properties:
-   *              code:
-   *                type: string
-   *                example: "M004"
-   *              name:
-   *                type: string
-   *                example: "Juki"
-   *    responses:
-   *      201:
-   *        description: result of success create member
-   *        content:
-   *          application/json:
-   *            schema:
-   *              type: object
-   *              properties:
-   *                success:
-   *                  type: boolean
-   *                  example: true
-   *                data:
-   *                  type: object
-   *                  properties:
-   *                    code:
-   *                      type: string
-   *                      example: "M004"
-   *                    name:
-   *                      type: string
-   *                      example: "Juki"
-   *                    penalty:
-   *                      type: string
-   *                      example: "null"
-   */
-
   createMember: async (req, res) => {
     const { code, name } = req.body;
 
@@ -69,7 +28,11 @@ module.exports = {
         data: dataMember,
         tablename: tablename,
       });
-      if (error) return ERROR(res, 500, error);
+      if (error) {
+        if (error.code == "ER_DUP_ENTRY")
+          return ERROR(res, 409, `Data with code ${code} already exists`);
+        return ERROR(res, 500, error);
+      }
 
       if (config.type == "mysql") {
         const dataMemberInDB = await selectData({
@@ -91,17 +54,6 @@ module.exports = {
     }
   },
 
-  /**
-   * @swagger
-   * /member:
-   *  get:
-   *    summary: to get all data from member table
-   *    description: This api will return all of data in member table.
-   *    responses:
-   *      200:
-   *        description: return all member
-   */
-
   getAllMembers: async (req, res) => {
     const { error, result } = await selectData({
       tablename: tablename,
@@ -110,24 +62,6 @@ module.exports = {
     if (error) return ERROR(res, 500, error);
     return SUCCESS(res, 200, result);
   },
-
-  /**
-   * @swagger
-   * /member/{id}:
-   *  get:
-   *    summary: to get data by ID from member table
-   *    description: This api will return detail data from member table with the primary key to pointing data.
-   *    parameters:
-   *      - in: path
-   *        name: id
-   *        required: true
-   *        description: ID required
-   *        schema:
-   *          type: string
-   *    responses:
-   *      200:
-   *        description: return detail data member
-   */
 
   getMemberByID: async (req, res) => {
     const id = req.params.id;
@@ -141,54 +75,9 @@ module.exports = {
     if (error) return ERROR(res, 500, error);
 
     if (Array.isArray(result) && result.length > 0)
-      return SUCCESS(res, 200, result);
+      return SUCCESS(res, 200, result[0]);
     return ERROR(res, 404, "Data not found");
   },
-
-  /**
-   * @swagger
-   * /member/{id}:
-   *  put:
-   *    summary: to change data member by ID from member table
-   *    description: This api will changing detail data from member table with the primary key to pointing data.
-   *    parameters:
-   *      - in: path
-   *        name: id
-   *        required: true
-   *        description: ID required
-   *        schema:
-   *          type: string
-   *    requestBody:
-   *      required: true
-   *      content:
-   *        application/json:
-   *          schema:
-   *            $ref: '#components/schemas/member'
-   *    responses:
-   *      200:
-   *        description: return detail data member
-   *        content:
-   *          application/json:
-   *            schema:
-   *              type: object
-   *              properties:
-   *                success:
-   *                  type: boolean
-   *                  example: true
-   *                data:
-   *                  type: object
-   *                  properties:
-   *                    code:
-   *                      type: string
-   *                      example: "M004"
-   *                    name:
-   *                      type: string
-   *                      example: "Juki"
-   *                    penalty:
-   *                      type: string
-   *                      format: date
-   *                      example: "1726790400000"
-   */
 
   updateMember: async (req, res) => {
     const id = req.params.id;
@@ -233,38 +122,6 @@ module.exports = {
     }
   },
 
-  /**
-   * @swagger
-   * /member/{id}:
-   *  delete:
-   *    summary: to delete data by ID from member table
-   *    description: This api will remove data from member table with the primary key to pointing data.
-   *    parameters:
-   *      - in: path
-   *        name: id
-   *        required: true
-   *        description: ID required
-   *        schema:
-   *          type: string
-   *    responses:
-   *      200:
-   *        description: success delete data member
-   *        content:
-   *          application/json:
-   *            schema:
-   *              type: object
-   *              properties:
-   *                success:
-   *                  type: boolean
-   *                  example: true
-   *                data:
-   *                  type: object
-   *                  properties:
-   *                    affectedRows:
-   *                      type: integer
-   *                      example: 1
-   */
-
   deleteMember: async (req, res) => {
     const id = req.params.id;
 
@@ -275,30 +132,12 @@ module.exports = {
       });
 
       if (error) return ERROR(res, 500, error);
-      if (result.affectedRows) return SUCCESS(res, 200, result);
+      if (result && result.affectedRows) return SUCCESS(res, 200, result);
       return ERROR(res, 404, "Data not found");
     } catch (err) {
       if (err) return ERROR(res, 500, err);
     }
   },
-
-  /**
-   * @swagger
-   * /member/{id}/borrow:
-   *  get:
-   *    summary: get data book brought by member ID
-   *    description: This api will return detail data all books which brought by member with the primary key (code) from member table to pointing data.
-   *    parameters:
-   *      - in: path
-   *        name: id
-   *        required: true
-   *        description: ID required
-   *        schema:
-   *          type: string
-   *    responses:
-   *      200:
-   *        description:
-   */
 
   getBookBorrowedMember: async (req, res) => {
     const id = req.params.id;
@@ -308,8 +147,19 @@ module.exports = {
 
       if (error) return ERROR(res, 500, error);
       if (Array.isArray(result) && result.length > 0)
-        return SUCCESS(res, 200, result);
+        return SUCCESS(res, 200, result[0]);
       return ERROR(res, 404, "Data not found");
+    } catch (err) {
+      if (err) return ERROR(res, 500, err);
+    }
+  },
+
+  getBookBorrowedEachMember: async (req, res) => {
+    try {
+      const { error, result } = await getBookBorrowedByEachMember();
+
+      if (error) return ERROR(res, 500, error);
+      return SUCCESS(res, 200, result);
     } catch (err) {
       if (err) return ERROR(res, 500, err);
     }

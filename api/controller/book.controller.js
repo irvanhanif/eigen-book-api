@@ -10,50 +10,6 @@ const { ERROR, SUCCESS } = require("../../helper/response");
 const tablename = "book";
 
 module.exports = {
-  /**
-   * @swagger
-   * /book:
-   *  post:
-   *    summary: to create book in book table
-   *    description:
-   *    requestBody:
-   *      required: true
-   *      content:
-   *        application/json:
-   *          schema:
-   *            type: object
-   *            properties:
-   *              code:
-   *                type: string
-   *                example: "NRN-7"
-   *              title:
-   *                type: string
-   *                example: "The Lion, the Witch and the Wardrobe"
-   *              author:
-   *                type: string
-   *                example: "C.S. Lewis"
-   *              stock:
-   *                type: integer
-   *                example: "3"
-   *    responses:
-   *      201:
-   *        description: result of success create book data
-   *        content:
-   *          application/json:
-   *            schema:
-   *              type: object
-   *              properties:
-   *                success:
-   *                  type: boolean
-   *                  example: true
-   *                data:
-   *                  type: object
-   *                  properties:
-   *                    affectedRows:
-   *                      type: integer
-   *                      example: 1
-   */
-
   createBook: async (req, res) => {
     const { code, title, author, stock } = req.body;
 
@@ -70,7 +26,11 @@ module.exports = {
         data: dataBook,
         tablename: tablename,
       });
-      if (error) return ERROR(res, 500, error);
+      if (error) {
+        if (error.code == "ER_DUP_ENTRY")
+          return ERROR(res, 409, `Data with code ${code} already exists`);
+        return ERROR(res, 500, error);
+      }
 
       if (config.type == "mysql") {
         const dataBookInDB = await selectData({
@@ -92,17 +52,6 @@ module.exports = {
     }
   },
 
-  /**
-   * @swagger
-   * /book:
-   *  get:
-   *    summary: to get all data from book table
-   *    description: This api will return all of data in book table.
-   *    responses:
-   *      200:
-   *        description:
-   */
-
   getAllBooks: async (req, res) => {
     const { error, result } = await selectData({
       tablename: tablename,
@@ -111,24 +60,6 @@ module.exports = {
     if (error) return ERROR(res, 500, error);
     return SUCCESS(res, 200, result);
   },
-
-  /**
-   * @swagger
-   * /book/{id}:
-   *  get:
-   *    summary: to get data by ID from book table
-   *    description: This api will return detail data from book table with the primary key to pointing data.
-   *    parameters:
-   *      - in: path
-   *        name: id
-   *        required: true
-   *        description: ID required
-   *        schema:
-   *          type: string
-   *    responses:
-   *      200:
-   *        description:
-   */
 
   getBookByID: async (req, res) => {
     const id = req.params.id;
@@ -142,56 +73,9 @@ module.exports = {
 
     if (error) return ERROR(res, 500, error);
     if (Array.isArray(result) && result.length > 0)
-      return SUCCESS(res, 200, result);
+      return SUCCESS(res, 200, result[0]);
     return ERROR(res, 404, "Data not found");
   },
-
-  /**
-   * @swagger
-   * /book/{id}:
-   *  put:
-   *    summary: to change data book by ID from book table
-   *    description: This api will changing detail data from book table with the primary key to pointing data.
-   *    parameters:
-   *      - in: path
-   *        name: id
-   *        required: true
-   *        description: ID required
-   *        schema:
-   *          type: string
-   *    requestBody:
-   *      required: true
-   *      content:
-   *        application/json:
-   *          schema:
-   *            $ref: '#/components/schemas/book'
-   *    responses:
-   *      200:
-   *        description: return detail data book
-   *        content:
-   *          application/json:
-   *            schema:
-   *              type: object
-   *              properties:
-   *                success:
-   *                  type: boolean
-   *                  example: true
-   *                data:
-   *                  type: object
-   *                  properties:
-   *                    code:
-   *                      type: string
-   *                      example: "NRN-7"
-   *                    title:
-   *                      type: string
-   *                      example: "The Lion, the Witch and the Wardrobe"
-   *                    author:
-   *                      type: string
-   *                      example: "C.S. Lewis"
-   *                    stock:
-   *                      type: integer
-   *                      example: "3"
-   */
 
   updateBook: async (req, res) => {
     const id = req.params.id;
@@ -214,7 +98,7 @@ module.exports = {
       });
       if (error) return ERROR(res, 500, error);
 
-      if (config.type == "mysql") {
+      if (config.type == "mysql" && result.affectedRows > 0) {
         const dataBookInDB = await selectData({
           tablename: tablename,
           primaryKey: {
@@ -236,38 +120,6 @@ module.exports = {
     }
   },
 
-  /**
-   * @swagger
-   * /book/{id}:
-   *  delete:
-   *    summary: to delete data by ID from book table
-   *    description: This api will remove data from book table with the primary key to pointing data.
-   *    parameters:
-   *      - in: path
-   *        name: id
-   *        required: true
-   *        description: ID required
-   *        schema:
-   *          type: string
-   *    responses:
-   *      200:
-   *        description: Success to delete data from book table
-   *        content:
-   *          application/json:
-   *            schema:
-   *              type: object
-   *              properties:
-   *                success:
-   *                  type: boolean
-   *                  example: true
-   *                data:
-   *                  type: object
-   *                  properties:
-   *                    affectedRows:
-   *                      type: integer
-   *                      example: 1
-   */
-
   deleteBook: async (req, res) => {
     const id = req.params.id;
 
@@ -277,20 +129,9 @@ module.exports = {
     });
 
     if (error) return ERROR(res, 500, error);
-    if (result.affectedRows) return SUCCESS(res, 200, result);
+    if (result && result.affectedRows) return SUCCESS(res, 200, result);
     return ERROR(res, 404, "Data not found");
   },
-
-  /**
-   * @swagger
-   * /book/count/all:
-   *  get:
-   *    summary: to get data quantities books in stock
-   *    description: This api will return detail data from all boook in table, where stock is ready and can be borrow by member. Api use primary key to pointing data.
-   *    responses:
-   *      200:
-   *        description:
-   */
 
   countAllBooks: async (req, res) => {
     try {
@@ -303,6 +144,7 @@ module.exports = {
 
       const resultSelectAll = await selectData({
         tablename: tablename,
+        where: { stock: "> 0" },
       });
       if (resultSelectAll.error) return ERROR(res, 500, resultSelectAll.error);
 

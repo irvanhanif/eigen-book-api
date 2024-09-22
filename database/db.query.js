@@ -1,10 +1,10 @@
 const { queryPromise } = require("../helper/asyncExecQuery");
 const config = require("./db.config");
 const connection = require("./db.connect");
-let query = "";
 
 const isExistTable = async (tablename) => {
-  query = `SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE  table_name = '${tablename}') as exist_table;`;
+  let query = `SELECT EXISTS (SELECT 1 FROM information_schema.tables 
+    WHERE table_name = '${tablename}') as exist_table;`;
   let existTable = await queryPromise(connection, query);
 
   if (config.type == "pg") {
@@ -237,7 +237,7 @@ module.exports = {
 
       let result = await queryPromise(
         connection,
-        `DELETE FROM ${request.tablename} WHERE ${pkDelete}`
+        `DELETE FROM ${request.tablename} WHERE ${pkDelete} LIMIT 1`
       );
 
       if (config.type == "pg") result = result.rowCount;
