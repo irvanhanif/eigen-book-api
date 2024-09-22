@@ -68,9 +68,8 @@ module.exports = {
           new Date(
             new Date(date).setDate(new Date(date).getDate() + 3)
           ).getTime() / 1000;
-        let thisDay = Math.floor(new Date().getTime() / 1000.0);
 
-        if (thisDay > endPenalty) {
+        if (dataBorrow["date_borrow"] > endPenalty) {
           await updateData({
             tablename: "member",
             primaryKey: { code: member_code },
